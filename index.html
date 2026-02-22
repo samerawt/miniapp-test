@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>متجر اللابتوبات المصغر</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; background-color: var(--tg-theme-bg-color); color: var(--tg-theme-text-color); }
+        .product-card { border: 1px solid #ccc; padding: 15px; margin: 10px; border-radius: 10px; }
+        button { background: var(--tg-theme-button-color); color: var(--tg-theme-button-text-color); border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>مرحباً بك في متجر اللابتوبات 💻</h1>
+    
+    <div class="product-card">
+        <h3>MacBook Pro M3</h3>
+        <p>السعر: 2000 USDT</p>
+        <button onclick="buyProduct('MacBook Pro M3')">طلب شراء</button>
+    </div>
+
+    <script>
+        // تهيئة تطبيق تلجرام
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // توسيع التطبيق ليشمل الشاشة كاملة
+
+        function buyProduct(name) {
+            tg.showAlert(`لقد اخترت شراء: ${name}\nسيتم التواصل معك لإتمام الدفع.`);
+        }
+    </script>
+</body>
+</html>

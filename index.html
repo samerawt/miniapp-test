@@ -2,32 +2,281 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>متجر اللابتوبات المصغر</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Laptop Store - Premium</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    
     <style>
-        body { font-family: sans-serif; text-align: center; background-color: var(--tg-theme-bg-color); color: var(--tg-theme-text-color); }
-        .product-card { border: 1px solid #ccc; padding: 15px; margin: 10px; border-radius: 10px; }
-        button { background: var(--tg-theme-button-color); color: var(--tg-theme-button-text-color); border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        :root {
+            --bg-dark: #091D34;
+            --accent-blue: #67B3FB;
+            --gold: #F4D68B;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            background-color: var(--bg-dark);
+            color: var(--white);
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* الهيدر المحسن */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--bg-dark);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(103, 179, 251, 0.2);
+        }
+
+        .brand-title {
+            color: var(--accent-blue);
+            font-weight: bold;
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        /* شبكة المنتجات */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            padding: 15px;
+        }
+
+        /* بطاقة المنتج المطورة */
+        .product-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            border: 1px solid rgba(103, 179, 251, 0.1);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .product-card:active { transform: scale(0.97); }
+
+        .img-container {
+            width: 100%;
+            height: 110px;
+            position: relative;
+            background: #152a41;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .product-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 8px; right: 8px;
+            font-size: 0.65rem;
+            padding: 3px 7px;
+            border-radius: 5px;
+            font-weight: bold;
+            z-index: 2;
+        }
+
+        .in-stock { background: var(--gold); color: var(--bg-dark); }
+        .out-stock { background: #ff4d4d; color: white; }
+
+        .info { padding: 10px; flex-grow: 1; display: flex; flex-direction: column; }
+        
+        .p-name { font-size: 0.85rem; height: 38px; margin-bottom: 8px; font-weight: 500; overflow: hidden; }
+
+        /* شريط المواصفات المصغر */
+        .mini-specs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            background: rgba(103, 179, 251, 0.08);
+            padding: 6px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .spec { font-size: 0.6rem; display: flex; align-items: center; gap: 3px; color: #b0c4d8; white-space: nowrap; overflow: hidden; }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+        }
+
+        .price { color: var(--gold); font-weight: bold; font-size: 1rem; }
+
+        /* النافذة المنبثقة للفلتر */
+        .bottom-sheet {
+            position: fixed;
+            bottom: -100%; left: 0; right: 0;
+            background: var(--bg-dark);
+            border-radius: 25px 25px 0 0;
+            z-index: 1001;
+            padding: 25px;
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-top: 2px solid var(--accent-blue);
+            max-height: 70vh; overflow-y: auto;
+        }
+
+        .bottom-sheet.active { bottom: 0; }
+
+        .overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none; z-index: 1000;
+        }
+
+        .lang-switch {
+            background: transparent; border: 1px solid var(--accent-blue);
+            color: var(--accent-blue); border-radius: 5px; padding: 4px 8px;
+            cursor: pointer;
+        }
+
+        .filter-section { margin-bottom: 20px; }
+        .filter-title { font-size: 0.9rem; color: var(--gold); margin-bottom: 10px; border-bottom: 1px solid #1a3a5a; padding-bottom: 5px; }
+        
+        [dir="ltr"] { text-align: left; }
+        [dir="rtl"] { text-align: right; }
     </style>
 </head>
 <body>
-    <h1>مرحباً بك في متجر اللابتوبات 💻</h1>
-    
-    <div class="product-card">
-        <h3>MacBook Pro M3</h3>
-        <p>السعر: 2000 USDT</p>
-        <button onclick="buyProduct('MacBook Pro M3')">طلب شراء</button>
+
+<header>
+    <button class="lang-switch" onclick="toggleLang()">EN / عربي</button>
+    <h1 class="brand-title" id="app-title">متجر اللابتوبات</h1>
+    <button onclick="openFilter()" style="background:none; border:none; font-size: 1.5rem; color:var(--accent-blue); cursor:pointer">🔍</button>
+</header>
+
+<div class="products-grid" id="productsContainer">
     </div>
 
-    <script>
-        // تهيئة تطبيق تلجرام
-        const tg = window.Telegram.WebApp;
-        tg.expand(); // توسيع التطبيق ليشمل الشاشة كاملة
+<div class="overlay" id="overlay" onclick="closeFilter()"></div>
+<div class="bottom-sheet" id="filterSheet">
+    <div class="filter-section" id="filter-content">
+        <div class="filter-title" id="filter-brand-label">الشركة / Brand</div>
+        <div id="brand-filters"></div>
+        <br>
+        <div class="filter-title" id="filter-tag-label">التصنيف / Tag</div>
+        <div id="tag-filters"></div>
+    </div>
+    <button onclick="closeFilter()" style="width:100%; padding:12px; background:var(--accent-blue); color:var(--bg-dark); border:none; border-radius:10px; font-weight:bold; cursor:pointer">تطبيق / Apply</button>
+</div>
 
-        function buyProduct(name) {
-            tg.showAlert(`لقد اخترت شراء: ${name}\nسيتم التواصل معك لإتمام الدفع.`);
-        }
-    </script>
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    // إعدادات الروابط من مستودعك
+    const BASE_URL = "https://raw.githubusercontent.com/samerawt/miniapp-test/main/";
+    const FILES = {
+        laptops: BASE_URL + "Laptops.xlsx%20-%20LAPTOP.csv",
+        tags: BASE_URL + "Laptops.xlsx%20-%20TAGS.csv"
+    };
+
+    let currentLang = 'ar';
+    let laptopData = [];
+    let tagsMap = {};
+
+    const i18n = {
+        ar: { title: "متجر اللابتوبات", cpu: "معالج", ram: "رام", gpu: "كرت", hard: "هارد", price: "$", in_stock: "متوفر", out_stock: "نفذ" },
+        en: { title: "Laptop Store", cpu: "CPU", ram: "RAM", gpu: "GPU", hard: "Disk", price: "$", in_stock: "In Stock", out_stock: "Out" }
+    };
+
+    function toggleLang() {
+        currentLang = currentLang === 'ar' ? 'en' : 'ar';
+        document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+        renderApp();
+    }
+
+    // جلب البيانات الأساسية
+    async function initData() {
+        // جلب الـ Tags أولاً
+        Papa.parse(FILES.tags, {
+            download: true,
+            header: true,
+            complete: (tagResults) => {
+                tagResults.data.forEach(t => { if(t.Tag_ID) tagsMap[t.Tag_ID] = t.Tags; });
+                
+                // جلب اللابتوبات
+                Papa.parse(FILES.laptops, {
+                    download: true,
+                    header: true,
+                    complete: (laptopResults) => {
+                        laptopData = laptopResults.data.filter(item => item.Laptop_ID);
+                        renderApp();
+                    }
+                });
+            }
+        });
+    }
+
+    function renderApp() {
+        const container = document.getElementById('productsContainer');
+        const lang = i18n[currentLang];
+        document.getElementById('app-title').innerText = lang.title;
+        
+        container.innerHTML = laptopData.map(item => {
+            const isAvailable = item.STATE === 'IN STOCK';
+            // رابط الصورة بناءً على الـ ID
+            const imgUrl = `${BASE_URL}images/${item.Laptop_ID}_main.jpg`;
+            
+            return `
+                <div class="product-card" onclick="openDetails('${item.Laptop_ID}')">
+                    <div class="img-container">
+                        <span class="status-badge ${isAvailable ? 'in-stock' : 'out-stock'}">
+                            ${isAvailable ? lang.in_stock : lang.out_stock}
+                        </span>
+                        <img src="${imgUrl}" class="product-img" onerror="this.src='https://via.placeholder.com/150?text=Laptop'">
+                    </div>
+                    <div class="info">
+                        <div class="p-name">${item.NAME}</div>
+                        <div class="mini-specs">
+                            <div class="spec">📟 ${item.CPU.split(' ')[0]}</div>
+                            <div class="spec">🎮 ${item.GPU.split(' ')[0]}</div>
+                            <div class="spec">⚡ ${item.RAM}</div>
+                            <div class="spec">💾 ${item.HARD.split(' ')[0]}</div>
+                        </div>
+                        <div class="price-row">
+                            <div class="price">${lang.price}${item.PRICE}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function openDetails(id) {
+        tg.showAlert("تم اختيار الجهاز رقم: " + id + "\nسيتم فتح صفحة التفاصيل في الخطوة القادمة.");
+    }
+
+    function openFilter() {
+        document.getElementById('filterSheet').classList.add('active');
+        document.getElementById('overlay').style.display = 'block';
+    }
+
+    function closeFilter() {
+        document.getElementById('filterSheet').classList.remove('active');
+        document.getElementById('overlay').style.display = 'none';
+    }
+
+    initData();
+</script>
 </body>
 </html>
